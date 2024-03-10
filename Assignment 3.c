@@ -63,11 +63,22 @@ void processCustomers(Customer customers[], int numCustomers, int numBooths) {
 
     // Distribute customers to booth queues based on arrival time
     for (int i = 0; i < numCustomers; ++i) {
-        int boothIndex = i % numBooths;
-        enqueue(&boothQueues[boothIndex], customers[i]);
+        int minQueueIndex = 0;
+
+        // Find the booth queue with the smallest arrival time
+        for (int j = 1; j < numBooths; ++j) {
+            if (boothQueues[j].front < boothQueues[j].rear &&
+                customers[boothQueues[j].data[boothQueues[j].front].arrivalTime].arrivalTime <
+                customers[boothQueues[minQueueIndex].data[boothQueues[minQueueIndex].front].arrivalTime].arrivalTime) {
+                minQueueIndex = j;
+            }
+        }
+
+        // Enqueue the customer to the selected booth queue
+        enqueue(&boothQueues[minQueueIndex], customers[i]);
     }
 
-    int currentTime = 0;
+    int currentTime[MAX_BOOTHS] = {0};
 
     for (int booth = 0; booth < numBooths; ++booth) {
         printf("Booth %d\n", booth + 1);
@@ -75,10 +86,10 @@ void processCustomers(Customer customers[], int numCustomers, int numBooths) {
         while (boothQueues[booth].front < boothQueues[booth].rear) {
             // Dequeue and process customers from the booth queue
             Customer currentCustomer = dequeue(&boothQueues[booth]);
-            currentCustomer.transactionTime = currentTime;
+            currentCustomer.transactionTime = currentTime[booth];
             printf("%s from line %d checks out at time %d.\n",
                    currentCustomer.name, currentCustomer.arrivalTime, currentCustomer.transactionTime);
-            currentTime += currentCustomer.numTickets * 2; // Assuming 2 seconds per ticket
+            currentTime[booth] += currentCustomer.numTickets * 2; // Assuming 2 seconds per ticket
         }
 
         // Output a blank line after each booth
@@ -89,4 +100,3 @@ void processCustomers(Customer customers[], int numCustomers, int numBooths) {
         free(boothQueues[i].data);
     }
 }
-
